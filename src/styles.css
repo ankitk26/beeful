@@ -1,4 +1,21 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Lora:ital,wght@0,400..700;1,400..700&display=swap');
 @import "tailwindcss";
+
+@theme {
+  --font-sans: "Outfit", sans-serif;
+  --font-serif: "Lora", serif;
+  --color-mauve-50: #faf5f9;
+  --color-mauve-100: #f4ebf2;
+  --color-mauve-200: #ecd9e8;
+  --color-mauve-300: #e0bbd8;
+  --color-mauve-400: #d094c4;
+  --color-mauve-500: #bf6eaa;
+  --color-mauve-600: #a75090;
+  --color-mauve-700: #8a3f75;
+  --color-mauve-800: #733561;
+  --color-mauve-900: #602f51;
+  --color-mauve-950: #36172c;
+}
 
 body {
   @apply m-0;

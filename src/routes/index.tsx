@@ -1,118 +1,153 @@
-import { createFileRoute } from '@tanstack/react-router'
-import {
-  Zap,
-  Server,
-  Route as RouteIcon,
-  Shield,
-  Waves,
-  Sparkles,
-} from 'lucide-react'
+import { createFileRoute } from '@tanstack/react-router';
+import { useState, useEffect, useCallback } from 'react';
+import { GameArea } from '../components/GameArea';
+import { WordList } from '../components/WordList';
+import { generatePuzzle, isValidWord, calculateScore } from '../utils/game';
+
+import allWordsList from '../utils/words.json';
+import allPangramsList from '../utils/pangrams.json';
+
+const allWordsSet = new Set(allWordsList);
 
 export const Route = createFileRoute('/')({ component: App })
 
 function App() {
-  const features = [
-    {
-      icon: <Zap className="w-12 h-12 text-cyan-400" />,
-      title: 'Powerful Server Functions',
-      description:
-        'Write server-side code that seamlessly integrates with your client components. Type-safe, secure, and simple.',
-    },
-    {
-      icon: <Server className="w-12 h-12 text-cyan-400" />,
-      title: 'Flexible Server Side Rendering',
-      description:
-        'Full-document SSR, streaming, and progressive enhancement out of the box. Control exactly what renders where.',
-    },
-    {
-      icon: <RouteIcon className="w-12 h-12 text-cyan-400" />,
-      title: 'API Routes',
-      description:
-        'Build type-safe API endpoints alongside your application. No separate backend needed.',
-    },
-    {
-      icon: <Shield className="w-12 h-12 text-cyan-400" />,
-      title: 'Strongly Typed Everything',
-      description:
-        'End-to-end type safety from server to client. Catch errors before they reach production.',
-    },
-    {
-      icon: <Waves className="w-12 h-12 text-cyan-400" />,
-      title: 'Full Streaming Support',
-      description:
-        'Stream data from server to client progressively. Perfect for AI applications and real-time updates.',
-    },
-    {
-      icon: <Sparkles className="w-12 h-12 text-cyan-400" />,
-      title: 'Next Generation Ready',
-      description:
-        'Built from the ground up for modern web applications. Deploy anywhere JavaScript runs.',
-    },
-  ]
+  const [puzzle, setPuzzle] = useState<{ centerLetter: string, letters: string[] } | null>(null);
+  const [input, setInput] = useState('');
+  const [foundWords, setFoundWords] = useState<string[]>([]);
+  const [score, setScore] = useState(0);
+  const [message, setMessage] = useState<string | null>(null);
+
+  // Auto-clear message
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => setMessage(null), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
+
+  useEffect(() => {
+    setPuzzle(generatePuzzle(allPangramsList));
+  }, []);
+
+  const handleLetterClick = useCallback((letter: string) => {
+    setInput(prev => prev + letter);
+  }, []);
+
+  const handleDelete = useCallback(() => {
+    setInput(prev => prev.slice(0, -1));
+  }, []);
+
+  const handleShuffle = useCallback(() => {
+    if (!puzzle) return;
+    setPuzzle(prev => {
+      if (!prev) return prev;
+      const outerLetters = prev.letters.filter(l => l !== prev.centerLetter);
+      for (let i = outerLetters.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [outerLetters[i], outerLetters[j]] = [outerLetters[j], outerLetters[i]];
+      }
+      return {
+        ...prev,
+        letters: [prev.centerLetter, ...outerLetters]
+      };
+    });
+  }, [puzzle]);
+
+  const handleEnter = useCallback(() => {
+    if (!puzzle) return;
+
+    // Check if empty
+    if (input.length === 0) return;
+
+    // Check if already found
+    if (foundWords.includes(input.toLowerCase())) {
+      setMessage('Already found');
+      setInput('');
+      return;
+    }
+
+    const result = isValidWord(input, puzzle.centerLetter, puzzle.letters, allWordsSet);
+    if (!result.valid) {
+      setMessage(result.error || 'Invalid word');
+      setTimeout(() => setInput(''), 600);
+      return;
+    }
+
+    // Valid word!
+    const wordScore = calculateScore(input.toLowerCase());
+    const isPangram = new Set(input.toLowerCase()).size === 7;
+
+    setScore(prev => prev + wordScore);
+    setFoundWords(prev => [...prev, input.toLowerCase()]);
+    setInput('');
+
+    setMessage(isPangram ? 'Pangram!' : 'Awesome!');
+
+  }, [input, puzzle, foundWords]);
+
+  // Handle keyboard input
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!puzzle) return;
+      if (e.key === 'Backspace') {
+        handleDelete();
+      } else if (e.key === 'Enter') {
+        handleEnter();
+      } else if (/^[a-zA-Z]$/.test(e.key)) {
+        const letter = e.key.toLowerCase();
+        handleLetterClick(letter);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [puzzle, handleDelete, handleEnter, handleLetterClick]);
+
+
+  if (!puzzle) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
-      <section className="relative py-20 px-6 text-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-purple-500/10"></div>
-        <div className="relative max-w-5xl mx-auto">
-          <div className="flex items-center justify-center gap-6 mb-6">
-            <img
-              src="/tanstack-circle-logo.png"
-              alt="TanStack Logo"
-              className="w-24 h-24 md:w-32 md:h-32"
-            />
-            <h1 className="text-6xl md:text-7xl font-black text-white [letter-spacing:-0.08em]">
-              <span className="text-gray-300">TANSTACK</span>{' '}
-              <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-                START
-              </span>
-            </h1>
-          </div>
-          <p className="text-2xl md:text-3xl text-gray-300 mb-4 font-light">
-            The framework for next generation AI applications
-          </p>
-          <p className="text-lg text-gray-400 max-w-3xl mx-auto mb-8">
-            Full-stack framework powered by TanStack Router for React and Solid.
-            Build modern applications with server functions, streaming, and type
-            safety.
-          </p>
-          <div className="flex flex-col items-center gap-4">
-            <a
-              href="https://tanstack.com/start"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-8 py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-lg transition-colors shadow-lg shadow-cyan-500/50"
-            >
-              Documentation
-            </a>
-            <p className="text-gray-400 text-sm mt-2">
-              Begin your TanStack Start journey by editing{' '}
-              <code className="px-2 py-1 bg-slate-700 rounded text-cyan-400">
-                /src/routes/index.tsx
-              </code>
-            </p>
-          </div>
+    <div className="min-h-screen bg-slate-50 font-sans selection:bg-mauve-200">
+      <header className="px-6 py-5 border-b border-slate-200 bg-white sticky top-0 z-50">
+        <div className="max-w-5xl mx-auto flex items-center justify-between">
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight font-serif italic">
+            Spelling Bee
+          </h1>
+          <button
+            onClick={() => {
+              setPuzzle(generatePuzzle(allPangramsList));
+              setFoundWords([]);
+              setScore(0);
+              setInput('');
+            }}
+            className="text-sm font-semibold text-slate-500 hover:text-mauve-600 transition-colors bg-slate-100 hover:bg-mauve-50 px-4 py-2 rounded-full"
+          >
+            New Puzzle
+          </button>
         </div>
-      </section>
+      </header>
 
-      <section className="py-16 px-6 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((feature, index) => (
-            <div
-              key={index}
-              className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6 hover:border-cyan-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/10"
-            >
-              <div className="mb-4">{feature.icon}</div>
-              <h3 className="text-xl font-semibold text-white mb-3">
-                {feature.title}
-              </h3>
-              <p className="text-gray-400 leading-relaxed">
-                {feature.description}
-              </p>
-            </div>
-          ))}
+      <main className="max-w-5xl mx-auto flex flex-col lg:flex-row gap-6 md:gap-8 py-4 md:py-8 px-4 md:px-6">
+        <div className="flex-1 w-full flex justify-center">
+          <GameArea
+            input={input}
+            centerLetter={puzzle.centerLetter}
+            letters={puzzle.letters}
+            onLetterClick={handleLetterClick}
+            onDelete={handleDelete}
+            onShuffle={handleShuffle}
+            onEnter={handleEnter}
+            message={message}
+          />
         </div>
-      </section>
+
+        <div className="w-full lg:w-80 shrink-0">
+          <WordList
+            words={foundWords}
+            totalScore={score}
+          />
+        </div>
+      </main>
     </div>
-  )
+  );
 }
