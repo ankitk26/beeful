@@ -21,7 +21,7 @@ export function Hexagon({ letter, isCenter = false, onClick }: HexagonProps) {
                 style={{ clipPath }}
             />
             <span
-                className={`relative z-10 text-[28px] font-semibold uppercase select-none tracking-wide font-serif ${isCenter ? 'text-white' : 'text-sky-950'
+                className={`relative z-10 text-[28px] font-bold uppercase select-none tracking-wide font-serif ${isCenter ? 'text-white' : 'text-sky-950'
                     }`}
             >
                 {letter}
