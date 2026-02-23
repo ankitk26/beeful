@@ -21,7 +21,6 @@ function HistoryPage() {
     const allDates = Object.keys(puzzleMap).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
 
     const entries: GameEntry[] = allDates
-      // Only show dates up to today
       .filter(dateStr => new Date(dateStr).getTime() <= Date.now())
       .map(dateStr => {
         const puzzle = puzzleMap[dateStr];
@@ -55,17 +54,15 @@ function HistoryPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans selection:bg-mauve-200 flex flex-col">
-      <header className="px-6 py-5 border-b border-slate-200 bg-white sticky top-0 z-50">
+    <div className="min-h-screen bg-[#f7fafe] font-sans flex flex-col">
+      <header className="px-4 md:px-6 py-3 border-b border-sky-200/30 bg-white/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <div className="flex flex-col">
-            <h1 className="text-3xl font-bold text-slate-900 tracking-tight font-serif italic">
-              History
-            </h1>
-          </div>
+          <a href="/" className="text-[22px] font-semibold text-sky-950 tracking-tight font-serif italic hover:text-sky-600 transition-colors">
+            History
+          </a>
           <a
-            href="/"
-            className="text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-full"
+            href="/game"
+            className="text-[11px] font-semibold text-sky-600 hover:text-sky-800 transition-colors tracking-[0.1em] uppercase"
           >
             Back to Game
           </a>
@@ -74,30 +71,30 @@ function HistoryPage() {
 
       <main className="flex-1 w-full max-w-3xl mx-auto py-8 px-4 md:px-6">
         {history.length === 0 ? (
-          <div className="bg-white p-12 rounded-2xl border border-slate-200 shadow-sm text-center">
-            <div className="text-slate-400 font-serif italic text-xl mb-2">No Puzzles Available</div>
-            <p className="text-slate-500 text-sm">Check back later for daily puzzles.</p>
+          <div className="bg-white p-16 rounded-2xl border border-sky-200/30 text-center">
+            <div className="text-sky-300 font-serif italic text-2xl mb-2">No Puzzles Yet</div>
+            <p className="text-sky-400 text-sm">Check back later for daily puzzles.</p>
           </div>
         ) : (
-          <div className="grid gap-3">
+          <div className="grid gap-2.5">
             {history.map(game => (
               <div
                 key={game.date}
-                className={`p-5 rounded-2xl border shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-colors ${game.played
-                    ? 'bg-white border-slate-200'
-                    : 'bg-slate-50 border-slate-100 opacity-70'
+                className={`px-5 py-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all ${game.played
+                  ? 'bg-white border-sky-200/40 hover:border-sky-300/50'
+                  : 'bg-sky-50/30 border-sky-100/40 opacity-50'
                   }`}
               >
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900 font-serif mb-0.5">
+                  <h3 className="text-[15px] font-semibold text-sky-950 mb-0.5">
                     {new Date(game.date).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
                   </h3>
-                  <div className="flex items-center gap-3 text-sm">
-                    <span className="bg-slate-100 text-slate-600 font-mono tracking-widest px-2 py-0.5 rounded text-xs">
+                  <div className="flex items-center gap-3 text-[12px]">
+                    <span className="text-sky-600 font-mono tracking-[0.2em]">
                       {game.letters}
                     </span>
-                    <span className="text-slate-400 text-xs">
-                      Center: <strong className="text-slate-600">{game.centerLetter.toUpperCase()}</strong>
+                    <span className="text-sky-400">
+                      Center: <strong className="text-sky-700">{game.centerLetter.toUpperCase()}</strong>
                     </span>
                   </div>
                 </div>
@@ -105,16 +102,16 @@ function HistoryPage() {
                 {game.played ? (
                   <div className="flex gap-6 sm:text-right shrink-0">
                     <div>
-                      <span className="block text-xs uppercase tracking-wider text-slate-500 font-semibold mb-0.5">Words</span>
-                      <span className="text-xl font-bold text-slate-900">{game.wordsCount}</span>
+                      <span className="block text-[10px] uppercase tracking-[0.15em] text-sky-400 font-semibold mb-0.5">Words</span>
+                      <span className="text-lg font-bold text-sky-950">{game.wordsCount}</span>
                     </div>
                     <div>
-                      <span className="block text-xs uppercase tracking-wider text-slate-500 font-semibold mb-0.5">Score</span>
-                      <span className="text-xl text-mauve-600 font-black">{game.score}</span>
+                      <span className="block text-[10px] uppercase tracking-[0.15em] text-sky-400 font-semibold mb-0.5">Score</span>
+                      <span className="text-lg text-sky-500 font-bold">{game.score}</span>
                     </div>
                   </div>
                 ) : (
-                  <span className="text-sm font-medium text-slate-400 italic shrink-0">
+                  <span className="text-[12px] font-medium text-sky-300 italic shrink-0 tracking-wide">
                     Not played
                   </span>
                 )}
