@@ -1,21 +1,15 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect, useCallback } from 'react';
-import { GameArea } from '../components/GameArea';
-import { WordList } from '../components/WordList';
-import { generatePuzzle, isValidWord, calculateScore } from '../utils/game';
-
-import allWordsList from '../utils/words.json';
-import allPangramsList from '../utils/pangrams.json';
-
-const allWordsSet = new Set(allWordsList);
+import { GameArea } from '../components/game-area';
+import { WordList } from '../components/word-list';
+import { getDailyPuzzle, isValidWord, calculateScore, hashString } from '../utils/game';
+import { useDailyGameState } from '../hooks/use-game-state';
 
 export const Route = createFileRoute('/')({ component: App })
 
 function App() {
-  const [puzzle, setPuzzle] = useState<{ centerLetter: string, letters: string[] } | null>(null);
+  const [puzzle, setPuzzle] = useState(() => getDailyPuzzle());
   const [input, setInput] = useState('');
-  const [foundWords, setFoundWords] = useState<string[]>([]);
-  const [score, setScore] = useState(0);
   const [message, setMessage] = useState<string | null>(null);
 
   // Auto-clear message
@@ -26,9 +20,10 @@ function App() {
     }
   }, [message]);
 
-  useEffect(() => {
-    setPuzzle(generatePuzzle(allPangramsList));
-  }, []);
+  // Use our persistence hook linked to today's date
+  const { gameState, setGameState } = useDailyGameState(puzzle.date);
+
+  const { foundWords, score } = gameState;
 
   const handleLetterClick = useCallback((letter: string) => {
     setInput(prev => prev + letter);
@@ -42,7 +37,7 @@ function App() {
     if (!puzzle) return;
     setPuzzle(prev => {
       if (!prev) return prev;
-      const outerLetters = prev.letters.filter(l => l !== prev.centerLetter);
+      const outerLetters = prev.letters.filter((l: string) => l !== prev.centerLetter);
       for (let i = outerLetters.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [outerLetters[i], outerLetters[j]] = [outerLetters[j], outerLetters[i]];
@@ -54,22 +49,29 @@ function App() {
     });
   }, [puzzle]);
 
-  const handleEnter = useCallback(() => {
+  const handleEnter = useCallback(async () => {
     if (!puzzle) return;
 
-    // Check if empty
     if (input.length === 0) return;
 
-    // Check if already found
     if (foundWords.includes(input.toLowerCase())) {
       setMessage('Already found');
       setInput('');
       return;
     }
 
-    const result = isValidWord(input, puzzle.centerLetter, puzzle.letters, allWordsSet);
-    if (!result.valid) {
-      setMessage(result.error || 'Invalid word');
+    const structCheck = isValidWord(input, puzzle.centerLetter, puzzle.letters);
+    if (!structCheck.valid) {
+      setMessage(structCheck.error || 'Invalid word');
+      setTimeout(() => setInput(''), 600);
+      return;
+    }
+
+    // Hash check security with salt!
+    const saltedInput = `${input.toLowerCase()}-${puzzle.date}-BEEFUL`;
+    const hashedInput = await hashString(saltedInput);
+    if (!puzzle.validHashes.includes(hashedInput)) {
+      setMessage('Not in word list');
       setTimeout(() => setInput(''), 600);
       return;
     }
@@ -78,15 +80,16 @@ function App() {
     const wordScore = calculateScore(input.toLowerCase());
     const isPangram = new Set(input.toLowerCase()).size === 7;
 
-    setScore(prev => prev + wordScore);
-    setFoundWords(prev => [...prev, input.toLowerCase()]);
-    setInput('');
+    setGameState(prev => ({
+      foundWords: [...prev.foundWords, input.toLowerCase()],
+      score: prev.score + wordScore
+    }));
 
+    setInput('');
     setMessage(isPangram ? 'Pangram!' : 'Awesome!');
 
-  }, [input, puzzle, foundWords]);
+  }, [input, puzzle, foundWords, setGameState]);
 
-  // Handle keyboard input
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!puzzle) return;
@@ -104,30 +107,34 @@ function App() {
   }, [puzzle, handleDelete, handleEnter, handleLetterClick]);
 
 
-  if (!puzzle) return null;
+  if (!puzzle) return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="text-slate-500 animate-pulse font-serif italic text-xl">Loading Puzzle...</div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans selection:bg-mauve-200">
+    <div className="min-h-screen bg-slate-50 font-sans selection:bg-mauve-200 flex flex-col">
       <header className="px-6 py-5 border-b border-slate-200 bg-white sticky top-0 z-50">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight font-serif italic">
-            Spelling Bee
-          </h1>
-          <button
-            onClick={() => {
-              setPuzzle(generatePuzzle(allPangramsList));
-              setFoundWords([]);
-              setScore(0);
-              setInput('');
-            }}
-            className="text-sm font-semibold text-slate-500 hover:text-mauve-600 transition-colors bg-slate-100 hover:bg-mauve-50 px-4 py-2 rounded-full"
+          <div className="flex flex-col">
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight font-serif italic">
+              Beeful
+            </h1>
+            <span className="text-xs text-slate-500 font-medium tracking-widest uppercase mt-1">
+              {new Date(puzzle.date).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+            </span>
+          </div>
+          <a
+            href="/history"
+            className="text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-full"
           >
-            New Puzzle
-          </button>
+            History
+          </a>
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto flex flex-col lg:flex-row gap-6 md:gap-8 py-4 md:py-8 px-4 md:px-6">
+      <main className="flex-1 w-full max-w-5xl mx-auto flex flex-col lg:flex-row gap-6 md:gap-8 py-4 md:py-8 px-4 md:px-6 mb-12">
         <div className="flex-1 w-full flex justify-center">
           <GameArea
             input={input}

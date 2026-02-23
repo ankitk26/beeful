@@ -1,26 +1,39 @@
-export function generatePuzzle(pangrams: string[]): { centerLetter: string, letters: string[] } {
-    // Pick a random pangram
-    const randomIndex = Math.floor(Math.random() * pangrams.length);
-    const pangram = pangrams[randomIndex];
+import dailyPuzzles from './daily-puzzles.json';
 
-    const uniqueLetters = Array.from(new Set(pangram));
+// Simple polyfill or usage of browser crypto for SHA-256
+export async function hashString(str: string): Promise<string> {
+    const msgUint8 = new TextEncoder().encode(str);                           // encode as (utf-8) Uint8Array
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);           // hash the message
+    const hashArray = Array.from(new Uint8Array(hashBuffer));                     // convert buffer to byte array
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join(''); // convert bytes to hex string
+    return hashHex;
+}
 
-    // Shuffle the letters
-    for (let i = uniqueLetters.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [uniqueLetters[i], uniqueLetters[j]] = [uniqueLetters[j], uniqueLetters[i]];
-    }
+function getLocalDateString() {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+}
 
-    // The center letter is the first one in our shuffled array
-    const centerLetter = uniqueLetters[0];
+export function getDailyPuzzle(dateString?: string) {
+    // If no date provided, use today LOCAL time YYYY-MM-DD
+    const dateStr = dateString || getLocalDateString();
+
+    // Use a fallback if date somehow out of range (like year 2026)
+    // Our generator gave us today + 365, but just in case:
+    const puzzle = (dailyPuzzles as any)[dateStr] || Object.values(dailyPuzzles)[0];
 
     return {
-        centerLetter,
-        letters: uniqueLetters,
+        date: dateStr,
+        centerLetter: puzzle.centerLetter,
+        letters: puzzle.letters,
+        validHashes: puzzle.validHashes, // Will be kept in memory but not easily read by user
     };
 }
 
-export function isValidWord(word: string, centerLetter: string, letters: string[], allWords: Set<string>): { valid: boolean; error?: string } {
+export function isValidWord(word: string, centerLetter: string, letters: string[]): { valid: boolean; error?: string } {
     const lowerWord = word.toLowerCase();
 
     if (lowerWord.length < 4) {
@@ -37,11 +50,7 @@ export function isValidWord(word: string, centerLetter: string, letters: string[
         }
     }
 
-    if (!allWords.has(lowerWord)) {
-        return { valid: false, error: 'Not in word list' };
-    }
-
-    return { valid: true };
+    return { valid: true }; // Structural check passes
 }
 
 export function calculateScore(word: string): number {
