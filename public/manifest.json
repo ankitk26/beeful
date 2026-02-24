@@ -1,6 +1,6 @@
 {
-  "short_name": "TanStack App",
-  "name": "Create TanStack App Sample",
+  "short_name": "beeful",
+  "name": "Word game to create as many words possible from given letters",
   "icons": [
     {
       "src": "favicon.ico",
