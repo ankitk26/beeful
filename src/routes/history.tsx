@@ -60,9 +60,27 @@ function HistoryPage() {
         };
       });
 
-    setHistory(entries);
+    const mockEntries: GameEntry[] = Array.from({ length: 30 }, (_, i) => ({
+      date: new Date(Date.now() - (i + 1) * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+      centerLetter: "E",
+      letters: "ABCDEF",
+      played: true,
+      score: Math.floor(Math.random() * 500) + 100,
+      wordsCount: Math.floor(Math.random() * 20) + 5,
+      words: Array.from({ length: 25 }, (_, j) => `word${j + 1}`),
+    }));
+
+    const allEntries = [...entries, ...mockEntries];
+    setHistory(allEntries);
     if (entries.some((e) => e.played)) {
-      setSelectedGame(entries.find((e) => e.played) || null);
+      const firstPlayed = entries.find((e) => e.played);
+      if (firstPlayed) {
+        const extendedWords = [
+          ...(firstPlayed.words || []),
+          ...Array.from({ length: 50 }, (_, i) => `testword${i + 1}`),
+        ];
+        setSelectedGame({ ...firstPlayed, words: extendedWords, wordsCount: extendedWords.length, score: firstPlayed.score + 100 });
+      }
     }
   }, []);
 
@@ -91,21 +109,16 @@ function HistoryPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
-            {/* Left column: Game list */}
-            <div className="space-y-2">
-              <h2 className="text-sm font-semibold text-neutral-500 tracking-[0.15em] uppercase mb-4">
-                All Games
-              </h2>
-              {history.map((game) => (
+          <div className="w-full max-w-5xl mx-auto space-y-2">
+            {history.map((game) => (
+              <div key={game.date}>
                 <button
-                  key={game.date}
-                  onClick={() => game.played && setSelectedGame(game)}
+                  onClick={() => game.played && setSelectedGame(selectedGame?.date === game.date ? null : game)}
                   disabled={!game.played}
                   className={`w-full px-5 py-4 rounded-xl border text-left flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all ${
                     game.played
                       ? selectedGame?.date === game.date
-                        ? "bg-sky-50 border-sky-400"
+                        ? "bg-sky-50 border-sky-400 rounded-b-none"
                         : "bg-white border-neutral-300 hover:border-neutral-400 cursor-pointer"
                       : "bg-neutral-100 border-neutral-200 opacity-50 cursor-not-allowed"
                   }`}
@@ -157,11 +170,74 @@ function HistoryPage() {
                     </span>
                   )}
                 </button>
-              ))}
-            </div>
 
-            {/* Right column: Selected game words */}
-            <div className="lg:sticky lg:top-20 lg:self-start">
+                {/* Mobile expanded words - inline accordion */}
+                {game.played && selectedGame?.date === game.date && (
+                  <div className="bg-white border border-t-0 border-sky-400 rounded-b-xl p-4 lg:hidden">
+                    <div className="flex items-end justify-between mb-4 pb-4 border-b border-neutral-200">
+                      <div>
+                        <p className="text-neutral-500 text-[11px] font-medium tracking-[0.15em] uppercase">
+                          {game.wordsCount} words found
+                        </p>
+                      </div>
+                      <span className="text-2xl font-semibold text-sky-600 leading-none">
+                        <ScoreCounter value={game.score} />
+                      </span>
+                    </div>
+                    <div className="max-h-[300px] overflow-y-auto pr-1">
+                      {game.words!.length === 0 ? (
+                        <p className="text-neutral-400 text-center py-4">
+                          No words found
+                        </p>
+                      ) : (
+                        <ul className="space-y-1">
+                          {[...game.words!]
+                            .sort((a, b) => {
+                              const aPangram = new Set(a).size === 7;
+                              const bPangram = new Set(b).size === 7;
+                              if (aPangram && !bPangram) return -1;
+                              if (!aPangram && bPangram) return 1;
+                              return b.length - a.length;
+                            })
+                            .map((word, idx) => (
+                              <li
+                                key={idx}
+                                className="py-2 px-3 hover:bg-neutral-50 transition-colors font-medium text-neutral-700 border-b border-neutral-100 last:border-0 flex items-center justify-between text-[15px] rounded-lg"
+                              >
+                                <span>
+                                  {word
+                                    .toUpperCase()
+                                    .split("")
+                                    .map((char, i) => (
+                                      <span
+                                        key={i}
+                                        className={
+                                          char === game.centerLetter.toUpperCase()
+                                            ? "text-sky-600 font-bold"
+                                            : ""
+                                        }
+                                      >
+                                        {char}
+                                      </span>
+                                    ))}
+                                </span>
+                                {new Set(word).size === 7 && (
+                                  <span className="text-[9px] uppercase tracking-[0.15em] bg-sky-600 text-white px-2.5 py-0.5 rounded-full font-bold">
+                                    Pangram
+                                  </span>
+                                )}
+                              </li>
+                            ))}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {/* Desktop: Right column - shown only on lg screens */}
+            <div className="hidden lg:block lg:sticky lg:top-20 lg:self-start">
               {selectedGame ? (
                 <div className="bg-white rounded-2xl border border-neutral-300 p-6">
                   <div className="flex items-end justify-between mb-5 pb-5 border-b border-neutral-200">
