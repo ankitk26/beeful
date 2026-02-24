@@ -68,7 +68,7 @@ function HistoryPage() {
 
   return (
     <div className="min-h-screen bg-[#f0f4f8] font-sans flex flex-col">
-      <header className="px-4 md:px-6 py-4 border-b border-neutral-300 bg-white/90 backdrop-blur-md sticky top-0 z-50">
+      <header className="px-4 py-4 border-b border-neutral-300 bg-white/90 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <span className="text-[22px] font-semibold text-neutral-900 tracking-tight">
             History
@@ -82,16 +82,16 @@ function HistoryPage() {
         </div>
       </header>
 
-      <main className="flex-1 w-full max-w-5xl mx-auto pt-6 md:pt-10 pb-8 px-4 md:px-6">
+      <main className="flex-1 w-full max-w-5xl mx-auto pt-6 md:pt-10 pb-8 px-4">
         {history.length === 0 ? (
-          <div className="bg-white p-16 rounded-2xl border border-neutral-300 text-center">
+          <div className="bg-white p-16 rounded-2xl border border-neutral-300 text-center max-w-3xl">
             <div className="text-neutral-400 text-2xl mb-2">No Puzzles Yet</div>
             <p className="text-neutral-500 text-sm">
               Check back later for daily puzzles.
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
             {/* Left column: Game list */}
             <div className="space-y-2">
               <h2 className="text-sm font-semibold text-neutral-500 tracking-[0.15em] uppercase mb-4">

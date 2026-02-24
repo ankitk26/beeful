@@ -5,7 +5,7 @@ export const Route = createFileRoute("/")({ component: HomePage });
 function HomePage() {
   return (
     <div className="min-h-screen bg-[#f0f4f8] font-sans flex flex-col hex-bg">
-      <main className="flex-1 flex items-center justify-center px-6 py-20">
+      <main className="flex-1 flex items-center justify-center px-4 py-20">
         <div className="text-center max-w-xl">
           {/* Decorative hex mark */}
           <div className="stagger-1 flex items-center justify-center mb-8">

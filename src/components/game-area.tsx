@@ -31,7 +31,7 @@ export function GameArea({
           className="fixed top-16 left-1/2 z-50"
           style={{ transform: "translateX(-50%)" }}
         >
-          <div className="toast-pop bg-neutral-900 text-white text-sm font-semibold px-6 py-2.5 rounded-full tracking-wide whitespace-nowrap">
+          <div className="toast-pop bg-neutral-900 text-white text-sm font-semibold py-2.5 rounded-full tracking-wide whitespace-nowrap">
             {message}
           </div>
         </div>

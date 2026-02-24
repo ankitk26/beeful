@@ -119,7 +119,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-[#f0f4f8] font-sans flex flex-col">
-      <header className="px-4 md:px-6 py-4 border-b border-neutral-300 bg-white/90 backdrop-blur-md sticky top-0 z-50">
+      <header className="px-4 py-4 border-b border-neutral-300 bg-white/90 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-baseline gap-4">
             <a
@@ -145,7 +145,7 @@ function App() {
         </div>
       </header>
 
-      <main className="flex-1 w-full max-w-5xl mx-auto flex flex-col lg:flex-row lg:items-start gap-4 lg:gap-8 pt-6 md:pt-10 pb-8 px-4 md:px-6">
+      <main className="flex-1 w-full max-w-5xl mx-auto flex flex-col lg:flex-row lg:items-start gap-4 lg:gap-8 pt-6 md:pt-10 pb-8 px-4">
         {/* Mobile: word list on top */}
         <div className="w-full lg:hidden">
           <WordList
