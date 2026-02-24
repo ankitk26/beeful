@@ -58,36 +58,21 @@ function HistoryPage() {
           wordsCount,
           words,
         };
+
+        return {
+          date: dateStr,
+          centerLetter: puzzle.centerLetter,
+          letters: puzzle.letters.join("").toUpperCase(),
+          played,
+          score,
+          wordsCount,
+          words,
+        };
       });
 
-    const mockEntries: GameEntry[] = Array.from({ length: 30 }, (_, i) => ({
-      date: new Date(Date.now() - (i + 1) * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split("T")[0],
-      centerLetter: "E",
-      letters: "ABCDEF",
-      played: true,
-      score: Math.floor(Math.random() * 500) + 100,
-      wordsCount: Math.floor(Math.random() * 20) + 5,
-      words: Array.from({ length: 25 }, (_, j) => `word${j + 1}`),
-    }));
-
-    const allEntries = [...entries, ...mockEntries];
-    setHistory(allEntries);
+    setHistory(entries);
     if (entries.some((e) => e.played)) {
-      const firstPlayed = entries.find((e) => e.played);
-      if (firstPlayed) {
-        const extendedWords = [
-          ...(firstPlayed.words || []),
-          ...Array.from({ length: 50 }, (_, i) => `testword${i + 1}`),
-        ];
-        setSelectedGame({
-          ...firstPlayed,
-          words: extendedWords,
-          wordsCount: extendedWords.length,
-          score: firstPlayed.score + 100,
-        });
-      }
+      setSelectedGame(entries.find((e) => e.played) || null);
     }
   }, []);
 
